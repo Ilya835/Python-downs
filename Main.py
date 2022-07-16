@@ -11,3 +11,4 @@ class MainFrame(Frame):
 
         canvas = Canvas(self)
         canvas.create_rectangle()
+        canvas.create_line()
