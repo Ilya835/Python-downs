@@ -14,7 +14,7 @@ velos = []
 #Массив отвечающий за базу данных клиентов
 client = []
 
-#Сохранени значений массива в файл CSV
+#Сохранение значений массива в файл CSV
 def save_array_to_csv(array, filename):
     with open(filename, 'w', newline='') as file:
         writer = csv.writer(file)
