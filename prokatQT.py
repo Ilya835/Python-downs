@@ -4,12 +4,21 @@ from form import Ui_MainWindow  # импорт нашего сгенериров
 import sys
 import csv
 from datetime import datetime
+import os
+
+def get_current_date():
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    print(current_date)
+    return current_date
+
 # Массив отвечающий за журнал проката
 stat = []
 # Массив отвечающий за велосипеды
 velos = []
 # Массив отвечающий за базу данных клиентов
 client = []
+# Дата
+date = get_current_date()
 
 class MatrixTableModel(QAbstractTableModel):
     def __init__(self, data):
@@ -47,23 +56,21 @@ class mywindow(QtWidgets.QMainWindow):
     def __init__(self):
         # Сохранение значений массива в файл CSV
         def save_array_to_csv(array, filename):
-            with open(filename, 'w', newline='') as file:
+            with open(filename, 'w', newline='\n') as file:
                 writer = csv.writer(file)
                 writer.writerows(array)
 
-        # Чтение значение журнала проката из файла stat.csv
-        def read_array_from_csv(filename):
-            with open(filename, 'r') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    stat.append(row)
+        # Чтение значений для массивов из файлов
+        def read_array_from_csv(filename, arrayname):
+            if not os.path.exists(filename):
+                with open(filename, 'w') as file:
+                    pass
 
-        # Чтение значение таблицы велосипедов из файла velos.csv
-        def read_array_from_csv2(filename):
-            with open(filename, 'r') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    velos.append(row)
+            else:
+                with open(filename, 'r') as file:
+                    reader = csv.reader(file)
+                    for row in reader:
+                        arrayname.append(row)
 
         # Обновление значений из файлов
         def update():
@@ -71,8 +78,8 @@ class mywindow(QtWidgets.QMainWindow):
             velos.clear()
             stat.clear()
             # Считывание данных из файлов и запись их в массивы
-            read_array_from_csv('stat.csv')
-            read_array_from_csv2('velos.csv')
+            read_array_from_csv('stat_' + date + '.csv', stat)
+            read_array_from_csv('velos_' + date + '.csv', velos)
             self.velosi = MatrixTableModel(velos)
             self.stati = MatrixTableModel(stat)
             self.ui.tableView.setModel(self.stati)
@@ -82,15 +89,14 @@ class mywindow(QtWidgets.QMainWindow):
 
         # Метод добавления новых записей в журнал
         def add():
-            now = datetime.datetime.now()
             update()
             stat.append([self.ui.name_prokat.text(),
                          self.ui.phone_number_prokat.text(),
                          self.ui.velo_prokat.currentText(),
-                         datetime.strptime(now.time(), "%H:%M:%S")
+
                          ])
             print(stat)
-            save_array_to_csv(stat, 'stat.csv')
+            save_array_to_csv(stat, 'stat_' + date + '.csv')
             update()
 
         # Очищение полей ввода
