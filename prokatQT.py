@@ -6,10 +6,12 @@ import csv
 from datetime import datetime
 import os
 
+
 def get_current_date():
     current_date = datetime.now().strftime('%Y-%m-%d')
     print(current_date)
     return current_date
+
 
 # Массив отвечающий за журнал проката
 stat = []
@@ -19,6 +21,9 @@ velos = []
 client = []
 # Дата
 date = get_current_date()
+# Массив тарифов
+tarifs = []
+
 
 class MatrixTableModel(QAbstractTableModel):
     def __init__(self, data):
@@ -46,6 +51,7 @@ class MatrixTableModel(QAbstractTableModel):
         self._data[index.row()][index.column()] = value
         self.dataChanged.emit(index, index)
         return True
+
 
 # Общий класс приложения
 class mywindow(QtWidgets.QMainWindow):
@@ -79,10 +85,11 @@ class mywindow(QtWidgets.QMainWindow):
             stat.clear()
             # Считывание данных из файлов и запись их в массивы
             read_array_from_csv('stat_' + date + '.csv', stat)
-            read_array_from_csv('velos_' + date + '.csv', velos)
+            read_array_from_csv('velos.csv', velos)
             self.velosi = MatrixTableModel(velos)
             self.stati = MatrixTableModel(stat)
-            self.ui.tableView.setModel(self.stati)
+            self.ui.prokat_table.setModel(self.stati)
+            self.ui.velo_table.setModel(self.velosi)
             # Отладочный вывод значений массивов в консоль
             print(stat)
             print(velos)
@@ -93,10 +100,17 @@ class mywindow(QtWidgets.QMainWindow):
             stat.append([self.ui.name_prokat.text(),
                          self.ui.phone_number_prokat.text(),
                          self.ui.velo_prokat.currentText(),
-
                          ])
             print(stat)
             save_array_to_csv(stat, 'stat_' + date + '.csv')
+            update()
+
+        def addvelo():
+            update()
+            velos.append([self.ui.velo_name.text(),
+                          self.ui.velo_count.value(),
+                          self.ui.velo_tarif.currentText()])
+            save_array_to_csv(velos, 'velos.csv')
             update()
 
         # Очищение полей ввода
@@ -108,10 +122,44 @@ class mywindow(QtWidgets.QMainWindow):
         super(mywindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        def select_velo():
+            indexes = self.ui.velo_table.selectionModel().selectedRows()
+            for index in sorted(indexes):
+                row = index.row()
+                print(velos[row][1])
+                self.ui.velo_name.setText(velos[row][0])
+                self.ui.velo_count.setValue(int(velos[row][1]))
+                self.ui.velo_tarif.setCurrentText(velos[row][2])
+
+        def find_rows_with_data():
+            rows_with_data = 0
+            for row_index, row in enumerate(velos):
+                if any(cell_data == self.ui.velo_name.text() for cell_data in row):
+                    rows_with_data = (row_index)
+            return rows_with_data
+
+        def change_velo():
+            row = (find_rows_with_data())
+            velos[row][0] = self.ui.velo_name.text()
+            velos[row][1] = self.ui.velo_count.value()
+            velos[row][2] = self.ui.velo_tarif.currentText()
+            print(velos)
+            save_array_to_csv(velos, 'velos.csv')
+
+        def delete_velosi():
+            row = (find_rows_with_data())
+            velos.pop(row)
+
         # Добавляем реакцию на сигналы от кнопок
         self.ui.add_prokat.clicked.connect(add)
         self.ui.clear_prokat.clicked.connect(clear_lines)
+        self.ui.add_velo.clicked.connect(addvelo)
+        self.ui.velo_table.clicked.connect(select_velo)
+        self.ui.edit_velo.clicked.connect(change_velo)
+        self.ui.delete_velo.clicked.connect(delete_velosi)
         update()
+
 
 app = QtWidgets.QApplication([])
 application = mywindow()
