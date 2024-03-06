@@ -24,7 +24,7 @@ date = get_current_date()
 # Массив тарифов
 tarifs = []
 
-
+# Класс для работы с таблицами и массивами
 class MatrixTableModel(QAbstractTableModel):
     def __init__(self, data):
         super().__init__()
